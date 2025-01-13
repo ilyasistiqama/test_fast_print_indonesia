@@ -34,7 +34,7 @@ $page = $page == null ? 1 : $page;
           <tbody>
                <?php if (empty($products)): ?>
                     <tr>
-                         <td colspan="7" class="text-center">No data</td>
+                         <td colspan="8" class="text-center">No data</td>
                     </tr>
                <?php endif; ?>
 
