@@ -14,3 +14,5 @@ $routes->post('/store', 'Home::store');
 $routes->put('/update/(:num)', 'Home::store/$1', ['as' => 'update']);
 
 $routes->delete('/delete', 'Home::destroy', ['as' => 'delete']);
+
+$routes->post('/sync', 'Home::sync', ['as' => 'sync']);

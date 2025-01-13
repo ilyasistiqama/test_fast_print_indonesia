@@ -11,15 +11,21 @@ class Home extends BaseController
 {
     public function index()
     {
-        // $api = new Api();
-        // $tes = $api->getData();
-
         $products = new Product();
-        $data['products'] = Product::withRelations($products->orderBy('created_at', 'DESC')->findAll());
+        $paginate = 10;
+
+        $data['products'] = Product::withRelations($products->where('status_id', 1)
+            ->orderBy('created_at', 'DESC')
+            ->paginate($paginate));
 
         foreach ($data['products'] as $product) {
             $product->created_at = date('d-m-Y', strtotime($product->created_at));
+            $product->synced_at = $product->synced_at != null ? date('d-m-Y', strtotime($product->synced_at)) : '-';
         }
+
+        $data['pager'] = $products->pager;
+        $data['page'] = $this->request->getGet('page');
+        $data['paginate'] = $paginate;
 
         return view('index', $data);
     }
@@ -92,5 +98,46 @@ class Home extends BaseController
         session()->setFlashdata('success', 'Product deleted successfully');
 
         return redirect()->to('/');
+    }
+
+    public function sync()
+    {
+        $api = new Api();
+        $response = json_decode($api->getData());
+        if ($response->error == 0) {
+            $product = new Product();
+            $product->where('synced_at IS NOT NULL')->delete();
+
+            foreach ($response->data as $data) {
+                $category = new Category();
+                $status = new Status();
+                $product = new Product();
+
+                if ($category->where('category_name', $data->kategori)->first() == null) {
+                    $category->save(['category_name' => $data->kategori]);
+                }
+
+                if ($status->where('status_name', $data->status)->first() == null) {
+                    $status->save(['status_name' => $data->status]);
+                }
+
+                $product->save([
+                    'product_name' => $data->nama_produk,
+                    'price' => $data->harga,
+                    'category_id' => $category->where('category_name', $data->kategori)->first()->id_category,
+                    'status_id' => $status->where('status_name', $data->status)->first()->id_status,
+                    'synced_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+
+
+            session()->setFlashdata('success', 'Synced successfully');
+
+            return redirect()->to('/');
+        } else {
+            session()->setFlashdata('error', 'Sync Failed. ' . $response->ket);
+
+            return redirect()->to('/');
+        }
     }
 }

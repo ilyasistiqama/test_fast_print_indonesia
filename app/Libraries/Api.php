@@ -9,9 +9,10 @@ class Api
 {
      public function getData()
      {
-          $username = env('usernameFastPrint');
-
           $now = Time::now();
+
+          $username = 'tesprogrammer' . $now->format('dmy') . 'C' . $now->addHours(1)->format('H');
+
           $password = 'bisacoding-' . $now->format('d-m-y');
           $md5 = md5($password);
 
